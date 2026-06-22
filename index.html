@@ -5,10 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pookie AI | The Cutest Intelligence</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Custom Heart Cursor Follower (CSS Only) -->
-    <div class="cursor-heart">❤️</div>
+    <!-- Doodle Canvas -->
+    <canvas id="doodle-canvas"></canvas>
+
+    <!-- Custom Heart Cursor Follower -->
+    <div class="cursor-heart" id="cursor-heart">❤️</div>
     
     <div class="bg-glow"></div>
     <div class="doodle d1">✨</div>
@@ -202,14 +208,107 @@
         </div>
     </footer>
 
-    
-    <style>
-        
-        body:hover .cursor-heart {
-            opacity: 1;
+    <script>
+        // --- Doodle Feature Logic ---
+        const canvas = document.getElementById('doodle-canvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let longPressTimer;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         }
-        
-    
-    </style>
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function getPos(e) {
+            const x = e.clientX || (e.touches && e.touches[0].clientX);
+            const y = e.clientY || (e.touches && e.touches[0].clientY);
+            return { x, y };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const pos = getPos(e);
+            lastX = pos.x;
+            lastY = pos.y;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+        }
+
+        function stopDrawing() {
+            if (!isDrawing) return;
+            isDrawing = false;
+            // Vanish effect: clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            // Prevent scrolling on mobile while doodling
+            if (e.type === 'touchmove') e.preventDefault();
+
+            const pos = getPos(e);
+            
+            ctx.strokeStyle = '#ff4d94'; // Pookie Pink
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ff4d94';
+
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            
+            lastX = pos.x;
+            lastY = pos.y;
+        }
+
+        // Computer: Right-click logic
+        window.addEventListener('mousedown', (e) => {
+            if (e.button === 2) { // Right click
+                startDrawing(e);
+            }
+        });
+
+        window.addEventListener('mouseup', (e) => {
+            if (e.button === 2) {
+                stopDrawing();
+            }
+        });
+
+        window.addEventListener('mousemove', draw);
+
+        // Prevent context menu from appearing
+        window.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+
+        // Phone: Long-press logic
+        window.addEventListener('touchstart', (e) => {
+            longPressTimer = setTimeout(() => {
+                startDrawing(e);
+            }, 500); // 500ms for long press
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => {
+            clearTimeout(longPressTimer);
+            stopDrawing();
+        });
+
+        window.addEventListener('touchmove', draw, { passive: false });
+
+        // --- Heart Cursor Logic (Enhancement) ---
+        const heart = document.getElementById('cursor-heart');
+        document.addEventListener('mousemove', (e) => {
+            heart.style.opacity = '1';
+            heart.style.left = e.clientX + 'px';
+            heart.style.top = e.clientY + 'px';
+        });
+    </script>
 </body>
 </html>
